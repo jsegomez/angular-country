@@ -15,4 +15,10 @@ export class CountryService {
 
     return this.http.get<ResponseCountry[]>(url);
   }
+
+  searchByCountryName(value: string):Observable<ResponseCountry[]> {
+    const url = `${environment.baseUrl}/name/${value}`;
+
+    return this.http.get<ResponseCountry[]>(url);
+  }
 }

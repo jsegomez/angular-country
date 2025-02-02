@@ -2,8 +2,8 @@ import { Component, inject, signal } from '@angular/core';
 import { SearchInputComponent } from "../../components/search-input/search-input.component";
 import { CountryTableComponent } from "../../components/country-table/country-table.component";
 import { CountryService } from '../../services/country.service';
-import { ResponseCountry } from '../../interfaces/response.country.interface';
-import { HttpErrorResponse } from '@angular/common/http';
+import { of } from 'rxjs';
+import { rxResource } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-by-capital',
@@ -12,27 +12,13 @@ import { HttpErrorResponse } from '@angular/common/http';
 })
 export default class ByCapitalComponent {
   private countryServ = inject(CountryService);
+  query = signal<string>('');
 
-  public countries = signal<ResponseCountry[]>([]);
-  public hasError = signal<boolean>(false);
-  public isLoading = signal<boolean>(false);
-
-  onSearch(value: string) {
-    if(this.isLoading()) return;
-
-    this.isLoading.set(true);
-
-    this.countryServ.searchByCapital(value).subscribe({
-      next: (data) => {
-        this.isLoading.set(false);
-        this.countries.set(data);
-      },
-      error: (err: HttpErrorResponse) => this.handleError(err)
-    });
-  };
-
-
-  handleError(err: HttpErrorResponse) {
-    this.isLoading.set(false);
-  }
+  countryResource = rxResource({
+    request: () => ({query: this.query()}),
+    loader: ({ request}) => {
+      if(!request.query) return of([]);
+      else return this.countryServ.searchByCapital(request.query);
+    }
+  });
 }
